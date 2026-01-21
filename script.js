@@ -110,6 +110,13 @@ canvas.addEventListener(
   false,
 );
 
+canvas.addEventListener("mousedown", (e) => {
+  if (e.target === canvas && selectedElement) {
+    selectedElement.classList.remove("selected");
+    selectedElement = null;
+  }
+});
+
 // Update Element
 function updateElementPosition(id, x, y) {
   const el = elements.find((item) => item.id == id);
