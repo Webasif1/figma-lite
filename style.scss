@@ -27,6 +27,7 @@ li{
   width: 100%;
   height: 100%;
   background-color: var(--primary-color);
+  overflow: hidden;
 }
 
 /***** predefined class *****/
@@ -36,6 +37,9 @@ li{
 .rect-box{
   position: absolute;
   background: var(--second--color);
+}
+.selected{
+  border: 3px solid var(--active);
 }
 /***** End predefined class *****/
 
@@ -52,6 +56,7 @@ li{
   bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 999;
   ul{
     display: flex;
     align-items: center;
