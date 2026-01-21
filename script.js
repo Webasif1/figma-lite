@@ -12,14 +12,17 @@ cursor.addEventListener('click', ()=>{
   cursor.classList.add('active')
 })
 
+
+let rectWidth = 500
+let rectHeight = 500
 rect.addEventListener("click", () => {
   let data = {
     id: Date.now(),
     type: "rectangle",
     x: 50,
     y: 50,
-    width: 100,
-    height: 80
+    width: rectWidth,
+    height: rectHeight
   };
 
   elements.push(data);
