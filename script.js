@@ -7,33 +7,35 @@ const canvas = document.querySelector("#main");
 // Global State
 let elements = [];
 let selectedElement = null;
-let rectWidth = 500;
+let rectWidth = 400;
 let rectHeight = 300;
-let rectTop, rectLeft;
+let rectTop = null;
+let rectLeft = null;
 
 cursor.addEventListener("click", () => {
   cursor.classList.add("active");
 });
-
-//Rectangle
+// min and max number random position
+function randomMinMax(max, min) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+//Create Rectangle
 rect.addEventListener("click", () => {
-  // min and max number random position
-  function randomMinMax(max, min) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-  rectTop = randomMinMax(60, 50);
-  rectLeft = randomMinMax(60, 50);
+  rectLeft = randomMinMax(200, 50);
+  rectTop = randomMinMax(300, 50);
+
   let data = {
     id: Date.now(),
     type: "rectangle",
-    x: rectTop,
-    y: rectLeft,
+    x: rectLeft,
+    y: rectTop,
     width: rectWidth,
     height: rectHeight,
   };
 
   elements.push(data);
   renderElement(data);
+  saveToLocalStorage()
 });
 
 // Render Rectangle
@@ -49,7 +51,7 @@ function renderElement(data) {
   ele.dataset.id = data.id;
   ele.dataset.type = data.type;
 
-  ele.addEventListener("click", () => selectElement(ele));
+  ele.addEventListener("mousedown", () => selectElement(ele));
 
   canvas.appendChild(ele);
 }
@@ -71,8 +73,7 @@ let offsetY = 0;
 canvas.addEventListener(
   "mousedown",
   (event) => {
-    box = event.target.classList.contains("selected");
-    if (box) {
+    if (event.target === selectedElement) {
       isDragging = true;
       offsetX = event.clientX - selectedElement.getBoundingClientRect().left;
       offsetY = event.clientY - selectedElement.getBoundingClientRect().top;
@@ -109,16 +110,46 @@ canvas.addEventListener(
   false,
 );
 
-document.addEventListener("mouseup", () => {
-  isDragging = false;
-});
+// Update Element
+function updateElementPosition(id, x, y) {
+  const el = elements.find((item) => item.id == id);
+  if (!el) return;
 
-console.log(selectedElement);
+  el.x = x;
+  el.y = y;
+}
 
 // Remove selected element
-canvas.addEventListener("mousedown", (e) => {
-  if (e.target === canvas && selectedElement) {
-    selectedElement.classList.remove("selected");
-    selectedElement = null;
+document.addEventListener("mouseup", () => {
+  if (isDragging && selectedElement) {
+    const id = selectedElement.dataset.id;
+    const x = parseInt(selectedElement.style.left, 10);
+    const y = parseInt(selectedElement.style.top, 10);
+
+    updateElementPosition(id, x, y);
+    saveToLocalStorage()
   }
+
+  isDragging = false;
+
+  if (selectedElement) {
+    selectedElement.style.cursor = "move";
+  }
+});
+
+// Add to localstorage
+function saveToLocalStorage() {
+  localStorage.setItem("figma-lite-elements", JSON.stringify(elements));
+}
+
+function loadFromLocalStorage() {
+  const saved = localStorage.getItem("figma-lite-elements");
+  if (!saved) return;
+
+  elements = JSON.parse(saved);
+  canvas.innerHTML = "";
+  elements.forEach(renderElement);
+}
+window.addEventListener("DOMContentLoaded", () => {
+  loadFromLocalStorage();
 });

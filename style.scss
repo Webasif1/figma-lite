@@ -37,9 +37,11 @@ li{
 .rect-box{
   position: absolute;
   background: var(--second--color);
+  cursor: move;
 }
 .selected{
   border: 3px solid var(--active);
+  z-index: 99;
 }
 /***** End predefined class *****/
 
