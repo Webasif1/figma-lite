@@ -11,6 +11,7 @@ let eleWidth = 300;
 let eleHeight = 200;
 let eleTop = null;
 let eleLeft = null;
+let isEditingText = false;
 
 cursor.addEventListener("click", () => {
   cursor.classList.add("active");
@@ -48,7 +49,7 @@ text.addEventListener("click", () => {
     type: "text",
     x: eleLeft,
     y: eleTop,
-    content: "Type...",
+    content: "Double Click to Type...",
     fontSize: 16,
     width: eleWidth,
     height: eleHeight,
@@ -70,7 +71,7 @@ function renderElement(data) {
   if (data.type === "text") {
     ele = document.createElement("div");
     ele.classList.add("text-box");
-    ele.contentEditable = true;
+    ele.contentEditable = false;
     ele.innerText = data.content;
     ele.style.fontSize = data.fontSize + "px";
   }
@@ -83,6 +84,13 @@ function renderElement(data) {
 
   ele.addEventListener("mousedown", () => selectElement(ele));
 
+  if (data.type === "text") {
+    ele.addEventListener("dblclick", (e) => {
+      e.stopPropagation();
+
+      enterTextEditMode(ele);
+    });
+  }
   // Save text changes
   if (data.type === "text") {
     ele.addEventListener("input", () => {
@@ -97,6 +105,40 @@ function renderElement(data) {
   canvas.appendChild(ele);
 }
 
+// Editing text
+function enterTextEditMode(ele) {
+  isDragging = false;
+  isEditingText = true;
+
+  ele.contentEditable = true;
+  ele.focus();
+  ele.classList.add("editing");
+
+  selectElement(ele);
+}
+
+// Exit editing text
+function exitTextEditMode(ele) {
+  isDragging = false;
+  isEditingText = false;
+
+  ele.contentEditable = false;
+  ele.classList.remove("editing");
+
+  saveToLocalStorage();
+}
+
+canvas.addEventListener("mousedown", (e) => {
+  if (
+    isEditingText &&
+    selectedElement &&
+    selectedElement.dataset.type === "text" &&
+    !selectedElement.contains(e.target)
+  ) {
+    exitTextEditMode(selectedElement);
+  }
+});
+
 // Selected Element
 function selectElement(el) {
   if (selectedElement) {
@@ -106,60 +148,58 @@ function selectElement(el) {
   el.classList.add("selected");
 }
 
-// Dragging
-let isDragging = false;
-let offsetX = 0;
-let offsetY = 0;
-canvas.addEventListener(
-  "mousedown",
-  (event) => {
-    if (!selectedElement) return;
-    const isText = selectedElement.dataset.type === "text";
-    if (isText && !event.altKey) {
-      return;
-    }
-    if (event.target === selectedElement) {
-      isDragging = true;
-      offsetX = event.clientX - selectedElement.getBoundingClientRect().left;
-      offsetY = event.clientY - selectedElement.getBoundingClientRect().top;
-      selectedElement.style.cursor = "grabbing";
-      event.preventDefault();
-    }
-  },
-  false
-);
-
-canvas.addEventListener(
-  "mousemove",
-  (event) => {
-    if (isDragging) {
-      const canvasRect = canvas.getBoundingClientRect();
-      let x = event.clientX - canvasRect.left - offsetX;
-      let y = event.clientY - canvasRect.top - offsetY;
-
-      // To keep inside canvas
-      x = Math.max(
-        0,
-        Math.min(x, canvas.clientWidth - selectedElement.offsetWidth)
-      );
-      y = Math.max(
-        0,
-        Math.min(y, canvas.clientHeight - selectedElement.offsetHeight)
-      );
-
-      selectedElement.style.left = x + "px";
-      selectedElement.style.top = y + "px";
-    }
-  },
-  false
-);
-
-canvas.addEventListener("mousedown", (e) => {
+// DeSelected Element
+function deSelectElement(e) {
   if (e.target === canvas && selectedElement) {
     selectedElement.classList.remove("selected");
     selectedElement = null;
   }
-});
+}
+
+// Dragging
+let isDragging = false;
+let offsetX = 0;
+let offsetY = 0;
+
+function draggingElem(event) {
+  if (!selectedElement) return;
+
+  if (isEditingText) return;
+
+  if (event.target === selectedElement) {
+    isDragging = true;
+    offsetX = event.clientX - selectedElement.getBoundingClientRect().left;
+    offsetY = event.clientY - selectedElement.getBoundingClientRect().top;
+    selectedElement.style.cursor = "grabbing";
+    event.preventDefault();
+  }
+}
+
+function movingElm(event) {
+  if (isDragging) {
+    const canvasRect = canvas.getBoundingClientRect();
+    let x = event.clientX - canvasRect.left - offsetX;
+    let y = event.clientY - canvasRect.top - offsetY;
+
+    // To keep inside canvas
+    x = Math.max(
+      0,
+      Math.min(x, canvas.clientWidth - selectedElement.offsetWidth)
+    );
+    y = Math.max(
+      0,
+      Math.min(y, canvas.clientHeight - selectedElement.offsetHeight)
+    );
+
+    selectedElement.style.left = x + "px";
+    selectedElement.style.top = y + "px";
+  }
+}
+
+//EventListeners
+canvas.addEventListener("mousedown", draggingElem, false);
+canvas.addEventListener("mousemove", movingElm, false);
+canvas.addEventListener("mousedown", deSelectElement);
 
 // Update Element
 function updateElementPosition(id, x, y) {
@@ -170,7 +210,6 @@ function updateElementPosition(id, x, y) {
   el.y = y;
 }
 
-// Remove selected element
 document.addEventListener("mouseup", () => {
   if (isDragging && selectedElement) {
     const id = selectedElement.dataset.id;
@@ -194,7 +233,7 @@ function deleteSelectedElement() {
 
   const id = selectedElement.dataset.id;
 
-  elements = elements.filter(item => item.id != id);
+  elements = elements.filter((item) => item.id != id);
 
   selectedElement.remove();
   selectedElement = null;
@@ -202,13 +241,10 @@ function deleteSelectedElement() {
 }
 
 document.addEventListener("keydown", (e) => {
-  if (
-    (e.key === "Delete")
-  ) {
+  if (e.key === "Delete" && !isEditingText) {
     deleteSelectedElement();
   }
 });
-
 
 // Add to localstorage
 function saveToLocalStorage() {
@@ -224,6 +260,3 @@ function loadFromLocalStorage() {
   elements.forEach(renderElement);
 }
 loadFromLocalStorage();
-
-
-

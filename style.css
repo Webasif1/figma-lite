@@ -63,6 +63,10 @@ li {
   outline: 2px solid var(--text--color);
 }
 
+.editing {
+  border: 2px dashed var(--text-color);
+}
+
 /***** End predefined class *****/
 /***** Navbar *****/
 .bottom-nav {
@@ -97,13 +101,24 @@ li {
 /***** End Navbar *****/
 /***** Sidebar *****/
 .side-bar {
-  width: 300px;
+  width: 350px;
   height: 100%;
   background-color: var(--box--bg);
   position: absolute;
   right: 0;
   top: 0;
   color: var(--second--color);
+  padding: 20px;
+}
+.side-bar .box-type {
+  margin-bottom: 10px;
+}
+.side-bar .box-type h2 {
+  font-size: 24px;
+}
+.side-bar .box-position p {
+  font-size: 20px;
+  font-weight: 500;
 }
 
 /***** End Sidebar *****//*# sourceMappingURL=style.css.map */
