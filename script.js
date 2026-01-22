@@ -157,6 +157,4 @@ function loadFromLocalStorage() {
   canvas.innerHTML = "";
   elements.forEach(renderElement);
 }
-window.addEventListener("DOMContentLoaded", () => {
-  loadFromLocalStorage();
-});
+loadFromLocalStorage();
