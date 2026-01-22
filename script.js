@@ -68,7 +68,7 @@ function renderElement(data) {
     ele.classList.add("rect-box");
   }
   if (data.type === "text") {
-    ele = document.createElement("h1");
+    ele = document.createElement("div");
     ele.classList.add("text-box");
     ele.contentEditable = true;
     ele.innerText = data.content;
