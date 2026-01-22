@@ -188,6 +188,28 @@ document.addEventListener("mouseup", () => {
   }
 });
 
+// Remove item from canvas
+function deleteSelectedElement() {
+  if (!selectedElement) return;
+
+  const id = selectedElement.dataset.id;
+
+  elements = elements.filter(item => item.id != id);
+
+  selectedElement.remove();
+  selectedElement = null;
+  saveToLocalStorage();
+}
+
+document.addEventListener("keydown", (e) => {
+  if (
+    (e.key === "Delete")
+  ) {
+    deleteSelectedElement();
+  }
+});
+
+
 // Add to localstorage
 function saveToLocalStorage() {
   localStorage.setItem("figma-lite-elements", JSON.stringify(elements));
@@ -202,3 +224,6 @@ function loadFromLocalStorage() {
   elements.forEach(renderElement);
 }
 loadFromLocalStorage();
+
+
+
