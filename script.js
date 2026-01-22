@@ -1,4 +1,4 @@
-//Select buttons
+//Select
 const cursor = document.querySelector(".cursor");
 const rect = document.querySelector(".rect");
 const text = document.querySelector(".text");
@@ -7,10 +7,10 @@ const canvas = document.querySelector("#main");
 // Global State
 let elements = [];
 let selectedElement = null;
-let rectWidth = 400;
-let rectHeight = 300;
-let rectTop = null;
-let rectLeft = null;
+let eleWidth = 300;
+let eleHeight = 200;
+let eleTop = null;
+let eleLeft = null;
 
 cursor.addEventListener("click", () => {
   cursor.classList.add("active");
@@ -19,39 +19,80 @@ cursor.addEventListener("click", () => {
 function randomMinMax(max, min) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+function topLeftPosition() {
+  eleLeft = randomMinMax(200, 50);
+  eleTop = randomMinMax(300, 50);
+}
 //Create Rectangle
 rect.addEventListener("click", () => {
-  rectLeft = randomMinMax(200, 50);
-  rectTop = randomMinMax(300, 50);
-
+  topLeftPosition();
   let data = {
     id: Date.now(),
     type: "rectangle",
-    x: rectLeft,
-    y: rectTop,
-    width: rectWidth,
-    height: rectHeight,
+    x: eleLeft,
+    y: eleTop,
+    width: eleWidth,
+    height: eleHeight,
   };
 
   elements.push(data);
   renderElement(data);
-  saveToLocalStorage()
+  saveToLocalStorage();
 });
 
-// Render Rectangle
-function renderElement(data) {
-  const ele = document.createElement("div");
-  ele.classList.add("rect-box");
+// Create text
+text.addEventListener("click", () => {
+  topLeftPosition();
+  let data = {
+    id: Date.now(),
+    type: "text",
+    x: eleLeft,
+    y: eleTop,
+    content: "Type...",
+    fontSize: 16,
+    width: eleWidth,
+    height: eleHeight,
+  };
 
+  elements.push(data);
+  renderElement(data);
+  saveToLocalStorage();
+});
+
+// Render ui
+function renderElement(data) {
+  let ele;
+
+  if (data.type === "rectangle") {
+    ele = document.createElement("div");
+    ele.classList.add("rect-box");
+  }
+  if (data.type === "text") {
+    ele = document.createElement("h1");
+    ele.classList.add("text-box");
+    ele.contentEditable = true;
+    ele.innerText = data.content;
+    ele.style.fontSize = data.fontSize + "px";
+  }
   ele.style.left = data.x + "px";
   ele.style.top = data.y + "px";
+  ele.dataset.id = data.id;
+  ele.dataset.type = data.type;
   ele.style.width = data.width + "px";
   ele.style.height = data.height + "px";
 
-  ele.dataset.id = data.id;
-  ele.dataset.type = data.type;
-
   ele.addEventListener("mousedown", () => selectElement(ele));
+
+  // Save text changes
+  if (data.type === "text") {
+    ele.addEventListener("input", () => {
+      const el = elements.find((item) => item.id == data.id);
+      if (el) {
+        el.content = ele.innerText;
+        saveToLocalStorage();
+      }
+    });
+  }
 
   canvas.appendChild(ele);
 }
@@ -61,7 +102,6 @@ function selectElement(el) {
   if (selectedElement) {
     selectedElement.classList.remove("selected");
   }
-
   selectedElement = el;
   el.classList.add("selected");
 }
@@ -73,16 +113,20 @@ let offsetY = 0;
 canvas.addEventListener(
   "mousedown",
   (event) => {
+    if (!selectedElement) return;
+    const isText = selectedElement.dataset.type === "text";
+    if (isText && !event.altKey) {
+      return;
+    }
     if (event.target === selectedElement) {
       isDragging = true;
       offsetX = event.clientX - selectedElement.getBoundingClientRect().left;
       offsetY = event.clientY - selectedElement.getBoundingClientRect().top;
       selectedElement.style.cursor = "grabbing";
-
       event.preventDefault();
     }
   },
-  false,
+  false
 );
 
 canvas.addEventListener(
@@ -93,21 +137,21 @@ canvas.addEventListener(
       let x = event.clientX - canvasRect.left - offsetX;
       let y = event.clientY - canvasRect.top - offsetY;
 
-      // Keep inside canvas
+      // To keep inside canvas
       x = Math.max(
         0,
-        Math.min(x, canvas.clientWidth - selectedElement.offsetWidth),
+        Math.min(x, canvas.clientWidth - selectedElement.offsetWidth)
       );
       y = Math.max(
         0,
-        Math.min(y, canvas.clientHeight - selectedElement.offsetHeight),
+        Math.min(y, canvas.clientHeight - selectedElement.offsetHeight)
       );
 
       selectedElement.style.left = x + "px";
       selectedElement.style.top = y + "px";
     }
   },
-  false,
+  false
 );
 
 canvas.addEventListener("mousedown", (e) => {
@@ -134,7 +178,7 @@ document.addEventListener("mouseup", () => {
     const y = parseInt(selectedElement.style.top, 10);
 
     updateElementPosition(id, x, y);
-    saveToLocalStorage()
+    saveToLocalStorage();
   }
 
   isDragging = false;
@@ -157,6 +201,4 @@ function loadFromLocalStorage() {
   canvas.innerHTML = "";
   elements.forEach(renderElement);
 }
-window.addEventListener("DOMContentLoaded", () => {
-  loadFromLocalStorage();
-});
+loadFromLocalStorage();
