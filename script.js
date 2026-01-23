@@ -3,6 +3,9 @@ const cursor = document.querySelector(".cursor");
 const rect = document.querySelector(".rect");
 const text = document.querySelector(".text");
 const canvas = document.querySelector("#main");
+const bgColorPicker = document.querySelector('#bgColorPicker');
+const colorCode = document.querySelector('.side-bar .bg-fill p');
+const root = document.documentElement;
 
 // Global State
 let elements = [];
@@ -12,6 +15,15 @@ let eleHeight = 200;
 let eleTop = null;
 let eleLeft = null;
 let isEditingText = false;
+
+function bgColor(){
+  bgColorPicker.addEventListener('input',(e)=>{
+    const newColor= e.target.value;
+    root.style.setProperty('--primary-color', newColor);
+    colorCode.innerHTML = newColor.slice(1);
+  })
+}
+bgColor()
 
 cursor.addEventListener("click", () => {
   cursor.classList.add("active");
